@@ -1,0 +1,64 @@
+// Copyright 2015 gRPC authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+option go_package = "./;squareTest";
+
+package Calculator;
+
+// The greeting service definition.
+service Calculator {
+  // Sends a greeting
+  rpc Square (SquareNumber) returns (SquareReply) {}
+
+  rpc ListFeatures(SquareNumber) returns (stream SquareReply) {}
+
+  rpc Chat(stream CheetMsg) returns (CheetRespond) {}
+
+  rpc MapLog(stream MapLogDate) returns (stream MapLogDate) {}
+}
+
+// The request message containing the user's name.
+message SquareNumber {
+    // reserved 3, 4 , 5 to 9; 保留或廢棄欄位
+    int32 number = 1;
+}
+
+// The response message containing the greetings
+message SquareReply {
+    int32 number = 1;
+}
+
+
+// Chat
+message CheetMsg {
+    int64 userID = 1;
+    int64 sendTime = 2;
+    string msg = 3;
+}
+
+message CheetRespond {
+    bool respond = 1; 
+}
+
+
+// MapLog
+message MapLogDate {
+  int32 latitude = 1;
+  int32 longitude = 2;
+}
+
+
+
