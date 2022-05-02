@@ -1,0 +1,94 @@
+#############################################
+#                 kit-server                #
+#############################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: kit-server-sv
+  labels:
+    app: kit-server
+    service: kit-server
+spec:
+  ports:
+  - port: 80
+    name: http
+  selector:
+    app: kit-server
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kit-server-config
+data:
+  kit-server-url: kit-server-sv
+---
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kit-server
+  name: kit-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kit-server
+  template:
+    metadata:
+      labels:
+        app: kit-server
+    spec:
+      containers:
+      - name: kit-backend
+        image: docker.io/library/kit_server:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+          name: http2
+---
+#############################################
+#                 kit-client                #
+#############################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: kit-client
+  labels:
+    app: kit-client
+    service: kit-client
+spec:
+  ports:
+  - port: 80
+    name: http
+  selector:
+    app: kit-client
+---
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kit-client
+  name: kit-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kit-client
+  template:
+    metadata:
+      labels:
+        app: kit-client
+    spec:
+      containers:
+      - name: kit-client
+        image: docker.io/library/kit_client:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+          name: http2 
+        env:  
+        - name: kit-server-url
+          valueFrom:
+            configMapKeyRef:
+              name: kit-server-config
+              key: kit-server-url

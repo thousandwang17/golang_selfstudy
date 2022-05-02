@@ -3,8 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"math/rand"
 	"net/url"
 	"os"
+	"time"
 
 	caculate "gokit/pkg/endpoint"
 	"gokit/pkg/transport/rpc"
@@ -13,11 +16,21 @@ import (
 	"github.com/go-kit/kit/transport/http/jsonrpc"
 )
 
+var KIT_SERVER_URL string
+
 func main() {
 	// if !strings.HasPrefix(instance, "http") {
 	// 	instance = "http://" + instance
 	// }
-	u, err := url.Parse("http://127.0.0.1/rpc")
+
+	// Mongo_host
+	KIT_SERVER_URL = os.Getenv("kit-server-url")
+	if KIT_SERVER_URL == "" {
+		log.Println("env: KIT_SERVER_URL is empty")
+		KIT_SERVER_URL = "127.0.0.1"
+	}
+
+	u, err := url.Parse(fmt.Sprintf("http://%v/rpc", KIT_SERVER_URL))
 	if err != nil {
 		os.Exit(1)
 	}
@@ -43,14 +56,19 @@ func main() {
 		SumEndpoint: sumEndpoint,
 	}
 
-	a, b := 1, 2
+	rand.Seed(time.Now().UnixNano())
 
-	v, err := svc.Sum(context.Background(), a, b)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
+	for {
+		a, b := rand.Intn(100), rand.Intn(100)
+		// a, b := 0, 0
+		v, err := svc.Sum(context.Background(), a, b)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Fprintf(os.Stdout, " %v %v + %v = %v\n", err, a, b, v)
+		time.Sleep(time.Millisecond * 100)
 	}
-	fmt.Fprintf(os.Stdout, "%v + %v = %v\n", a, b, v)
 
 	// var concatEndpoint endpoint.Endpoint
 	// {

@@ -7,6 +7,11 @@ import (
 	"fmt"
 	"gokit/pkg/endpoint"
 	"gokit/pkg/service"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"net/http"
 
@@ -30,8 +35,35 @@ func InitRPC() {
 			Encode:   encodeSumResponse,
 		},
 	})
-	http.Handle("/rpc", handler)
-	http.ListenAndServe(":80", nil)
+
+	srv := &http.Server{
+		Addr:    ":80",
+		Handler: handler,
+	}
+
+	log.Println("start Server ...")
+	_, cancel := context.WithCancel(context.Background())
+	srv.RegisterOnShutdown(cancel)
+	ch := make(chan os.Signal, 1)
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Println("SERVER err:", err)
+		}
+	}()
+
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	//阻塞channel
+	<-ch
+
+	log.Println("Shutdown Server ...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server Shutdown: ", err)
+	}
+
 }
 
 /// server ///
@@ -45,7 +77,7 @@ func decodeSumRequest(ctx context.Context, msg json.RawMessage) (interface{}, er
 }
 
 func encodeSumResponse(ctx context.Context, result interface{}) (json.RawMessage, error) {
-	fmt.Printf("%v", result)
+	fmt.Printf("SumResponse %v", result)
 	sum, ok := result.(endpoint.SumResponse)
 	if !ok {
 		return nil, errors.New("result is not an int")

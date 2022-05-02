@@ -28,6 +28,10 @@ func (s Caculate) Sum(ctx context.Context, a, b int) (int, error) {
 	return response.V, response.Err
 }
 
+var (
+	_ endpoint.Failer = SumResponse{}
+)
+
 // SumRequest collects the request parameters for the Sum method.
 type SumRequest struct {
 	A, B int
@@ -38,3 +42,6 @@ type SumResponse struct {
 	V   int   `json:"v"`
 	Err error `json:"-"` // should be intercepted by Failed/errorEncoder
 }
+
+// Failed implements endpoint.Failer.
+func (r SumResponse) Failed() error { return r.Err }
