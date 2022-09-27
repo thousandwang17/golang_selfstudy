@@ -1,0 +1,9 @@
+go 1.18
+
+// 本機開發用 的 mod 需加入 .gitignore
+// go.work 取代 go.mod replace ,以避免本地修改 go.mod 並誤上傳雲端分支
+// only work on go 1.18+ 
+use (
+	../../example
+	./
+)

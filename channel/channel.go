@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
+	"runtime/trace"
 	"sync"
 	"time"
 )
@@ -18,6 +20,8 @@ type MaxHandel struct {
 }
 
 func main() {
+	trace.Start(os.Stderr)
+	defer trace.Stop()
 	rand.Seed(time.Now().UnixNano())
 
 	// O2N()
@@ -27,17 +31,17 @@ func main() {
 
 	select {
 	case test <- 1:
-		log.Println("1")
+		// log.Println("1")
 	default:
 	}
 
 	select {
 	case test <- 2:
-		log.Println("2")
+		// log.Println("2")
 	default:
 	}
 
-	log.Print("N2N start")
+	// log.Print("N2N start")
 
 	N2N()
 }
@@ -68,10 +72,11 @@ func O2N() {
 			defer wg.Done()
 
 			for d := range data {
-				log.Println(d)
+				fmt.Print("%v", d)
+				// log.Println(d)
 			}
 
-			log.Printf("%v down", u)
+			// log.Printf("%v down", u)
 		}(i)
 	}
 
@@ -93,7 +98,7 @@ func N2O() {
 				value := rand.Intn(100)
 				select {
 				case <-stopch:
-					log.Printf("%v stop", u)
+					//log.Printf("%v stop", u)
 					return
 				case data <- value:
 					<-time.After(100 * time.Millisecond)
@@ -131,8 +136,8 @@ func N2N() {
 	toStop := make(chan string, 1)
 
 	go func() {
-		stoper := <-toStop
-		log.Printf("stop %v", stoper)
+		<-toStop
+		//log.Printf("stop %v", stoper)
 		close(stopch)
 	}()
 
@@ -144,8 +149,8 @@ func N2N() {
 
 				if value == 0 {
 					select {
-					case toStop <- fmt.Sprintf("sender %v", u):
-						log.Printf("SEDDER %v get 0", u)
+					case toStop <- "sender":
+						// log.Printf("SEDDER %d get 0", u)
 					default:
 					}
 					return
@@ -154,14 +159,14 @@ func N2N() {
 				//
 				select {
 				case <-stopch:
-					log.Printf("SEDDER stop1 %v", u)
+					// log.Printf("SEDDER stop1 %v", u)
 					return
 				default:
 				}
 
 				select {
 				case <-stopch:
-					log.Printf("SEDDER stop2 %v", u)
+					// log.Printf("SEDDER stop2 %v", u)
 					return
 				case data <- value:
 				default:
@@ -179,27 +184,27 @@ func N2N() {
 			for {
 				select {
 				case <-stopch:
-					log.Printf("RECVIVER stop1 %v", u)
+					// log.Printf("RECVIVER stop1 %v", u)
 					return
 				default:
 				}
 
 				select {
 				case <-stopch:
-					log.Printf("RECVIVER stop2 %v", u)
+					// log.Printf("RECVIVER stop2 %v", u)
 					return
 
-				case v := <-data:
+				case <-data:
 					if handler.Number > 100 {
 						select {
 						case toStop <- fmt.Sprintf("receiver %v ", u):
-							log.Printf("receiver %v : Number over  100", u)
+							// log.Printf("receiver %v : Number over  100", u)
 						default:
 						}
 						return
 					}
 					handler.lock.Lock()
-					log.Printf("%v", v)
+					// log.Printf("%v", v)
 					handler.Number++
 					handler.lock.Unlock()
 				default:
@@ -211,6 +216,6 @@ func N2N() {
 
 	wg.Wait()
 
-	log.Printf("end %v", maxHandel.Number)
+	// log.Printf("end %v", maxHandel.Number)
 
 }

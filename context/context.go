@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// ctx 只能取消一次
 func test(ctx context.Context, id int) {
 	go func(ctx context.Context) {
 		for {
